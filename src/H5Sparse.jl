@@ -236,11 +236,33 @@ function h5writecsc(fid::HDF5.H5DataStore, name::AbstractString, m::Integer, n::
         end
     end
     g = create_group(fid, name)
+    flush(g)
     g["m"] = m
     g["n"] = n    
-    g["colptr"] = colptr
-    g["rowval"] = rowval
-    g["nzval"] = nzval
+    create_dataset(
+        g, "colptr", 
+        eltype(colptr), 
+        ((length(colptr),), (-1,)),
+        chunk=isnothing(chunk) ? HDF5.heuristic_chunk(colptr) : chunk,
+        blosc=blosc,
+        kwargs...,
+    )[1:length(colptr)] = colptr
+    create_dataset(
+        g, "rowval", 
+        eltype(rowval), 
+        ((length(rowval),), (-1,)),
+        chunk=isnothing(chunk) ? HDF5.heuristic_chunk(rowval) : chunk,
+        blosc=blosc,
+        kwargs...,
+    )[1:length(rowval)] = rowval    
+    create_dataset(
+        g, "nzval",
+        eltype(nzval), 
+        ((length(nzval),), (-1,)),
+        chunk=isnothing(chunk) ? HDF5.heuristic_chunk(nzval) : chunk,
+        blosc=blosc,
+        kwargs...,
+    )[1:length(nzval)] = nzval
     return
 end
 
