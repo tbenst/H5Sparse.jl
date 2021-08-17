@@ -226,7 +226,8 @@ function h5writecsc(fid::HDF5.H5DataStore, name::AbstractString, B::SparseMatrix
     m, n = size(B)
     h5writecsc(fid, name, m, n, SparseArrays.getcolptr(B), rowvals(B), nonzeros(B); kwargs...)
 end
-function h5writecsc(fid::HDF5.H5DataStore, name::AbstractString, m::Integer, n::Integer, colptr::AbstractVector{<:Integer}, rowval::AbstractVector{<:Integer}, nzval::AbstractVector; overwrite=false, chunk=nothing, blosc=5, kwargs...)
+
+function h5writecsc(fid::HDF5.H5DataStore, name::AbstractString, m::Integer, n::Integer, colptr::AbstractVector{<:Integer}, rowval::AbstractVector{<:Integer}, nzval::AbstractVector; overwrite=false, chunk="heuristic", blosc=5, kwargs...)
     if name in keys(fid)
         if overwrite
             delete_object(fid, name)
@@ -241,7 +242,7 @@ function h5writecsc(fid::HDF5.H5DataStore, name::AbstractString, m::Integer, n::
         g, "colptr", 
         eltype(colptr), 
         ((length(colptr),), (-1,)),
-        chunk=isnothing(chunk) ? HDF5.heuristic_chunk(colptr) : chunk,
+        chunk= (chunk=="heuristic") ? HDF5.heuristic_chunk(colptr) : chunk,
         blosc=blosc,
         kwargs...,
     )[1:length(colptr)] = colptr
@@ -249,7 +250,7 @@ function h5writecsc(fid::HDF5.H5DataStore, name::AbstractString, m::Integer, n::
         g, "rowval", 
         eltype(rowval), 
         ((length(rowval),), (-1,)),
-        chunk=isnothing(chunk) ? HDF5.heuristic_chunk(rowval) : chunk,
+        chunk= (chunk=="heuristic") ? HDF5.heuristic_chunk(rowval) : chunk,
         blosc=blosc,
         kwargs...,
     )[1:length(rowval)] = rowval    
@@ -257,7 +258,7 @@ function h5writecsc(fid::HDF5.H5DataStore, name::AbstractString, m::Integer, n::
         g, "nzval",
         eltype(nzval), 
         ((length(nzval),), (-1,)),
-        chunk=isnothing(chunk) ? HDF5.heuristic_chunk(nzval) : chunk,
+        chunk= (chunk=="heuristic") ? HDF5.heuristic_chunk(nzval) : chunk,
         blosc=blosc,
         kwargs...,
     )[1:length(nzval)] = nzval
