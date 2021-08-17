@@ -52,12 +52,13 @@ Matrix(A)           # Matrix
 ```
 
 """
-struct H5SparseMatrixCSC{Tv, Ti<:Integer} <: SparseArrays.AbstractSparseMatrixCSC{Tv, Ti}
-    fid::HDF5.H5DataStore          # Backing HDF5 file
+
+struct H5SparseMatrixCSC{Tv, Ti<:Integer, Td<:HDF5.H5DataStore} <: SparseArrays.AbstractSparseMatrixCSC{Tv, Ti}
+    fid::HDF5.H5DataStore   # Backing HDF5 file
     name::String            # Dataset name, i.e., data is stored in fid[name]
     rows::UnitRange{Int}    # Subset of rows stored in fid[name] accessible via this instance
     cols::UnitRange{Int}    # Subset of columns stored in fid[name] accessible via this instance
-    function H5SparseMatrixCSC(fid::HDF5.H5DataStore, name::AbstractString, rows::UnitRange{Int}, cols::UnitRange{Int}) where {Tv,Ti<:Integer}
+    function H5SparseMatrixCSC(fid::HDF5.H5DataStore, name::AbstractString, rows::UnitRange{Int}, cols::UnitRange{Int}) where {Tv,Ti<:Integer,Td<:HDF5.H5DataStore}
         name in keys(fid) || throw(ArgumentError("$name is not in $fid"))
         g = fid[name]
         g isa HDF5.Group || throw(ArgumentError("fid[name] is $g, but must be a HDF5.Group"))
@@ -77,7 +78,7 @@ struct H5SparseMatrixCSC{Tv, Ti<:Integer} <: SparseArrays.AbstractSparseMatrixCS
         0 < first(cols) <= n || throw(ArgumentError("first column is $(first(cols)), but n is $n"))
         0 < last(cols) <= n || throw(ArgumentError("last column is $(last(cols)), but n is $n"))
         first(cols) <= last(cols) || throw(ArgumentError("first columns is $(first(cols)), but last column is $(last(cols))"))
-        new{eltype(g["nzval"]),eltype(g["rowval"])}(fid, String(name), rows, cols)
+        new{eltype(g["nzval"]),eltype(g["rowval"]),typeof(fid)}(fid, String(name), rows, cols)
     end
 end
 H5SparseMatrixCSC(filename::AbstractString, args...; kwargs...) = H5SparseMatrixCSC(h5open(filename, "cw"), args...; kwargs...)
